@@ -6,7 +6,7 @@ A command-line forensic tool for analyzing suspicious emails, detecting phishing
 - Parses email headers (From, Reply-To, Return-Path, X-Originating-IP)
 - Detects header spoofing, domain mismatches, and brand impersonation in display names
 - Extracts and checks all URLs against VirusTotal (active submission, not just passive lookup)
-- Detects and resolves shortened URLs (bit.ly, tinyurl, etc.) before checking the real destination
+- Detects and resolves shortened URLs (bit.ly, tinyurl, etc.) before checking the real destination — dead/invalid shortcodes are treated as suspicious
 - Extracts and checks file hashes (MD5/SHA1/SHA256) against VirusTotal
 - Checks originating IP against VirusTotal + AbuseIPDB
 - Optional deep-scan via URLScan.io (sandboxed visual analysis + screenshot)
@@ -16,6 +16,14 @@ A command-line forensic tool for analyzing suspicious emails, detecting phishing
 - Calculates a weighted risk score and gives a phishing verdict
 - Exports reports to JSON and HTML
 
+## Screenshots
+
+### Live Email Analysis
+![CLI Output](assets/mailcsi_cli_output.png)
+
+### HTML Report
+![HTML Report](assets/mailcsi_html_report.png)
+
 ## Setup
 
 1. Install dependencies:
@@ -23,7 +31,7 @@ A command-line forensic tool for analyzing suspicious emails, detecting phishing
    pip install requests
    ```
 
-2. Add your API keys in `config.py`:
+2. Create a `config.py` file (use `config.example.py` as a template):
    ```python
    VIRUSTOTAL_API_KEY = "your_key_here"
    ABUSEIPDB_API_KEY = "your_key_here"
@@ -57,14 +65,14 @@ You'll then be asked whether to also run URLScan.io (slower, gives sandboxed vis
 | 80+   | 🔴 HIGH RISK — LIKELY PHISHING |
 
 ### Scoring Weights
-- Malicious URL detected: +30 per URL
-- Malicious file hash: +30 per hash
+- Malicious URL detected (1+ VT engines): +30 per URL
+- Malicious file hash (3+ VT engines): +30 per hash
 - Header spoofing detected: +20 per indicator
 - Suspicious attachment type: +20 per type
-- Malicious IP: +25
+- Malicious IP (3+ VT engines or 25%+ AbuseIPDB score): +25
 - Link text mismatch: +15 per mismatch
-- Unresolved shortened URL: +15
-- Shortened URL (resolved): +10
+- Unresolved/dead shortened URL: +15
+- Shortened URL (successfully resolved): +10
 - Urgency keyword: +5 per keyword
 - Suspicious subject term: +5 per term
 
@@ -83,13 +91,17 @@ You'll then be asked whether to also run URLScan.io (slower, gives sandboxed vis
 
 ```
 MailCSI/
-├── mailcsi.py           # main script
-├── header_parser.py     # header extraction and spoofing detection
-├── phish_detector.py    # keyword analysis and risk scoring
-├── mitre_mapper.py       # MITRE ATT&CK technique mapping
-├── html_report.py        # HTML report generator
-├── urlscan_checker.py    # URLScan.io sandboxed analysis
-├── config.py              # API keys
+├── assets/
+│   ├── mailcsi_cli_output.png    # terminal screenshot
+│   └── mailcsi_html_report.png   # HTML report screenshot
+├── mailcsi.py                    # main script
+├── header_parser.py              # header extraction and spoofing detection
+├── phish_detector.py             # keyword analysis and risk scoring
+├── mitre_mapper.py                # MITRE ATT&CK technique mapping
+├── html_report.py                 # HTML report generator
+├── urlscan_checker.py             # URLScan.io sandboxed analysis
+├── config.example.py              # API key template (copy to config.py)
+├── .gitignore
 └── README.md
 ```
 
