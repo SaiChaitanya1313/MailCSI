@@ -76,10 +76,11 @@ def is_shortened_url(url):
 
 
 def resolve_shortened_url(url):
-    """Follow redirects to find the real destination of a shortened URL."""
+    """Follow redirects to find the real destination of a shortened URL.
+    Returns None if the shortener is dead/invalid (resolves back to itself)."""
     try:
         r = requests.head(url, allow_redirects=True, timeout=10)
-        if r.url != url:
+        if r.url.rstrip("/") != url.rstrip("/"):
             return r.url
     except requests.RequestException:
         pass
@@ -88,11 +89,12 @@ def resolve_shortened_url(url):
     try:
         r = requests.get(url, allow_redirects=True, timeout=10, stream=True)
         r.close()
-        if r.url != url:
+        if r.url.rstrip("/") != url.rstrip("/"):
             return r.url
     except requests.RequestException:
         pass
 
+    # Either it errored out, or it resolved back to the same URL (dead/invalid shortcode)
     return None
 
 
